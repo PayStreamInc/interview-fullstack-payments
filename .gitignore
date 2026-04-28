@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.DS_Store
+*.log
+.playwright-mcp
+postgres-data
+sftp/upload/*
+!sftp/upload/.gitkeep
+!sftp/upload/outbound/
+!sftp/upload/outbound/.gitkeep
+!sftp/upload/inbound/
+!sftp/upload/inbound/.gitkeep
+!sftp/upload/archive/
+!sftp/upload/archive/.gitkeep

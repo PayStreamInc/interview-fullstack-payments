@@ -1,0 +1,2 @@
+payment_id,refund_id,amount_cents,currency,routing_number,account_number,account_holder_name,account_type
+pay_smoke_001,11111111-1111-1111-1111-111111111111,4250,USD,021000021,123456789,Jane Doe,checking

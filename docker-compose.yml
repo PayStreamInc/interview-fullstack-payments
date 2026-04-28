@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: payments
+      POSTGRES_USER: payments
+      POSTGRES_PASSWORD: payments
+    ports:
+      - "25432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./apps/api/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payments -d payments"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  sftp:
+    image: emberstack/sftp:latest
+    ports:
+      - "2222:22"
+    volumes:
+      - ./sftp/sftp.json:/app/config/sftp.json:ro
+      - ./sftp/upload:/home/payments/upload
+
+  bank:
+    build:
+      context: .
+      dockerfile: apps/bank/Dockerfile
+    environment:
+      BANK_INPUT_DIR: /sftp/outbound
+      BANK_OUTPUT_DIR: /sftp/inbound
+      BANK_ARCHIVE_DIR: /sftp/archive
+      BANK_POLL_MS: 3000
+      CHOKIDAR_USEPOLLING: true
+    volumes:
+      - ./apps/bank:/app/apps/bank
+      - ./sftp/upload:/sftp
+    depends_on:
+      - sftp
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      API_PORT: 3000
+      DATABASE_URL: postgres://payments:payments@postgres:5432/payments
+      SFTP_HOST: sftp
+      SFTP_PORT: 22
+      SFTP_USERNAME: payments
+      SFTP_PASSWORD: payments
+      SFTP_REMOTE_DIR: upload
+      CHOKIDAR_USEPOLLING: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages/shared:/app/packages/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sftp:
+        condition: service_started
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      WEB_PORT: 5173
+      VITE_API_URL: http://127.0.0.1:3000
+      CHOKIDAR_USEPOLLING: true
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages/shared:/app/packages/shared
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
