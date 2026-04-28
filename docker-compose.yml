@@ -64,6 +64,29 @@ services:
       sftp:
         condition: service_started
 
+  payment-cron:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: npm run dev:cron
+    environment:
+      DATABASE_URL: postgres://payments:payments@postgres:5432/payments
+      SFTP_HOST: sftp
+      SFTP_PORT: 22
+      SFTP_USERNAME: payments
+      SFTP_PASSWORD: payments
+      SFTP_REMOTE_DIR: upload
+      PAYMENT_CRON_INTERVAL_MS: 5000
+      CHOKIDAR_USEPOLLING: true
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages/shared:/app/packages/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sftp:
+        condition: service_started
+
   web:
     build:
       context: .

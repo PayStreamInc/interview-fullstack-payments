@@ -6,8 +6,8 @@ export async function listSftpDirectory() {
   return withSftpClient((client) => client.list(env.sftp.remoteDir));
 }
 
-export async function uploadSftpFile(relativePath: string, contents: string | Buffer) {
-  const remotePath = resolveRemotePath(relativePath);
+export async function uploadSftpFile(fileName: string, contents: string | Buffer) {
+  const remotePath = resolveRemotePath(path.posix.join("outbound", validateFileName(fileName)));
 
   return withSftpClient(async (client) => {
     await client.put(contents, remotePath);
@@ -15,8 +15,8 @@ export async function uploadSftpFile(relativePath: string, contents: string | Bu
   });
 }
 
-export async function downloadSftpFile(relativePath: string) {
-  const remotePath = resolveRemotePath(relativePath);
+export async function downloadSftpFile(fileName: string) {
+  const remotePath = resolveRemotePath(path.posix.join("inbound", validateFileName(fileName)));
 
   return withSftpClient(async (client) => {
     const contents = await client.get(remotePath);
@@ -49,4 +49,14 @@ function resolveRemotePath(relativePath: string) {
   }
 
   return path.posix.join(env.sftp.remoteDir, normalizedPath);
+}
+
+function validateFileName(fileName: string) {
+  const normalizedFileName = path.posix.basename(fileName);
+
+  if (!normalizedFileName || normalizedFileName !== fileName) {
+    throw new Error("SFTP file operations require a file name, not a path");
+  }
+
+  return normalizedFileName;
 }

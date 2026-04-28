@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "cron": "node dist/jobs/paymentCron.js",
+    "cron:once": "node dist/jobs/paymentCron.js --once",
     "dev": "tsx watch src/server.ts",
+    "dev:cron": "tsx watch src/jobs/paymentCron.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
