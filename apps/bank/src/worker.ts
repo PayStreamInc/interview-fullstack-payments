@@ -9,7 +9,11 @@ const pollMs = Number(process.env.BANK_POLL_MS ?? 3000);
 type PaymentRow = Record<string, string>;
 
 async function main() {
-  await Promise.all([mkdir(inputDir, { recursive: true }), mkdir(outputDir, { recursive: true }), mkdir(archiveDir, { recursive: true })]);
+  await Promise.all([
+    mkdir(inputDir, { recursive: true }),
+    mkdir(outputDir, { recursive: true }),
+    mkdir(archiveDir, { recursive: true }),
+  ]);
   console.log(`Bank simulator watching ${inputDir}`);
 
   await processPendingFiles();
@@ -59,12 +63,14 @@ function validatePayment(row: PaymentRow) {
 
   if (!row.payment_id) errors.push("missing payment_id");
   if (!row.refund_id) errors.push("missing refund_id");
-  if (!/^\d+$/.test(row.amount_cents ?? "") || Number(row.amount_cents) <= 0) errors.push("invalid amount_cents");
+  if (!/^\d+$/.test(row.amount_cents ?? "") || Number(row.amount_cents) <= 0)
+    errors.push("invalid amount_cents");
   if (row.currency !== "USD") errors.push("unsupported currency");
   if (!/^\d{9}$/.test(row.routing_number ?? "")) errors.push("invalid routing_number");
   if (!/^\d{4,17}$/.test(row.account_number ?? "")) errors.push("invalid account_number");
   if (!row.account_holder_name) errors.push("missing account_holder_name");
-  if (row.account_type !== "checking" && row.account_type !== "savings") errors.push("invalid account_type");
+  if (row.account_type !== "checking" && row.account_type !== "savings")
+    errors.push("invalid account_type");
 
   return errors;
 }
@@ -109,7 +115,12 @@ function splitCsvLine(line: string) {
 
 function toCsv(rows: Array<Record<string, string>>) {
   const headers = ["payment_id", "refund_id", "status", "reason", "processed_at"];
-  return [headers.join(","), ...rows.map((row) => headers.map((header) => escapeCsv(row[header] ?? "")).join(","))].join("\n") + "\n";
+  return (
+    [
+      headers.join(","),
+      ...rows.map((row) => headers.map((header) => escapeCsv(row[header] ?? "")).join(",")),
+    ].join("\n") + "\n"
+  );
 }
 
 function escapeCsv(value: string) {

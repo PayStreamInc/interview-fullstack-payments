@@ -19,7 +19,10 @@ async function main() {
     process.exit(1);
   }
 
-  const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "");
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "");
   const migrationsDir = path.join("apps", "api", "db", "migrations");
   const filePath = path.join(migrationsDir, `${timestamp}_${slug}.sql`);
   const contents = `-- ${name}\n-- Write SQL here.\n\nBEGIN;\n\n-- Example:\n-- ALTER TABLE refunds ADD COLUMN claimed_at timestamptz;\n\nCOMMIT;\n`;

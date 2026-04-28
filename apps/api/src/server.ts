@@ -51,18 +51,14 @@ app.post("/refunds/:id/claim", async (req, res) => {
   const parsed = claimRefundRequestSchema.safeParse(req.body);
 
   if (!parsed.success) {
-    res
-      .status(400)
-      .json({
-        error: "Invalid claim request",
-        details: parsed.error.flatten(),
-      });
+    res.status(400).json({
+      error: "Invalid claim request",
+      details: parsed.error.flatten(),
+    });
     return;
   }
 
-  res
-    .status(501)
-    .json({ error: "Claim flow is intentionally left as the interview task" });
+  res.status(501).json({ error: "Claim flow is intentionally left as the interview task" });
 });
 
 app.post("/dev/sftp-test", async (_req, res, next) => {
@@ -75,12 +71,7 @@ app.post("/dev/sftp-test", async (_req, res, next) => {
 });
 
 app.use(
-  (
-    error: unknown,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction,
-  ) => {
+  (error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
   },

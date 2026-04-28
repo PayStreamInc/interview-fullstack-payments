@@ -2,8 +2,7 @@ import "dotenv/config";
 
 export const env = {
   port: Number(process.env.API_PORT ?? 3000),
-  databaseUrl:
-    process.env.DATABASE_URL ?? "postgres://payments:payments@localhost:5432/payments",
+  databaseUrl: process.env.DATABASE_URL ?? "postgres://payments:payments@localhost:5432/payments",
   sftp: {
     host: process.env.SFTP_HOST ?? "localhost",
     port: Number(process.env.SFTP_PORT ?? 2222),

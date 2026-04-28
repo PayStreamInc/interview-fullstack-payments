@@ -20,7 +20,19 @@ async function main() {
 
   const result = spawnSync(
     "docker",
-    ["compose", "exec", "-T", "postgres", "psql", "-v", "ON_ERROR_STOP=1", "-U", "payments", "-d", "payments"],
+    [
+      "compose",
+      "exec",
+      "-T",
+      "postgres",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "payments",
+      "-d",
+      "payments",
+    ],
     { input: sql, stdio: ["pipe", "inherit", "inherit"] },
   );
 
