@@ -20,6 +20,7 @@ docker compose up --build
 - API: `http://127.0.0.1:3000`
 - API health: `curl http://127.0.0.1:3000/health`
 - SFTP smoke: `curl -X POST http://127.0.0.1:3000/dev/sftp-test`
+- Payment cron logs: `docker compose logs -f payment-cron`
 
 Postgres client:
 
@@ -33,17 +34,13 @@ SFTP from host:
 127.0.0.1:2222 / payments / payments
 ```
 
-## Candidate Task
+## Payment Cron Scaffold
 
-Implement ACH claim flow end-to-end:
+The `payment-cron` Docker service runs `apps/api/src/jobs/paymentCron.ts` with live reload via `tsx watch`.
 
-- React form validation and success/error handling
-- API validation
-- persist ACH claim data
-- move refund from `unclaimed` to `pending`
-- prevent duplicate claims
-
-The async CSV export job is out of scope. SFTP and the bank simulator exist for follow-up reliability discussion.
+```sh
+docker compose up --build payment-cron
+```
 
 ## Bank Simulator
 
@@ -72,15 +69,6 @@ npm run migration:run -- <migration-file>.sql
 ```
 
 Migrations are plain SQL files in `apps/api/db/migrations`. If a migration changes base schema, update `apps/api/db/init.sql` too.
-
-## Dev Commands
-
-```sh
-npm run typecheck
-npm run build
-npm run format
-npm run format:check
-```
 
 Source is bind-mounted into Docker for API, web, and bank. If watchers miss a change:
 
