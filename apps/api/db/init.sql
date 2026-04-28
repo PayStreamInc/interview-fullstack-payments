@@ -7,16 +7,6 @@ CREATE TABLE IF NOT EXISTS refunds (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS ach_claims (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  refund_id uuid NOT NULL UNIQUE REFERENCES refunds(id),
-  account_holder_name text NOT NULL,
-  routing_number text NOT NULL,
-  account_number_last4 text NOT NULL,
-  account_type text NOT NULL CHECK (account_type IN ('checking', 'savings')),
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
 INSERT INTO refunds (id, amount_cents, currency, status)
 VALUES
   ('11111111-1111-1111-1111-111111111111', 4250, 'USD', 'unclaimed'),

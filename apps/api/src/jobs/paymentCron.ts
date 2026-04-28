@@ -1,12 +1,8 @@
 import { env } from "../env.js";
+import { runPaymentCronOnce } from "../services/paymentCronService.js";
 
 const runOnce = process.argv.includes("--once");
 let isRunning = false;
-
-async function runPaymentCronOnce() {
-  // TODO: Implement pending payment export here during the interview.
-  console.log("Payment cron tick: no export logic implemented yet");
-}
 
 async function runTick() {
   if (isRunning) {
