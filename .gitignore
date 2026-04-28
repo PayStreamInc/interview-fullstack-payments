@@ -13,3 +13,4 @@ sftp/upload/*
 !sftp/upload/inbound/.gitkeep
 !sftp/upload/archive/
 !sftp/upload/archive/.gitkeep
+*.gitkeep
