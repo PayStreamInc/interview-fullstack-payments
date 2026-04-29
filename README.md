@@ -42,6 +42,32 @@ The `payment-cron` Docker service runs `apps/api/src/jobs/paymentCron.ts` with l
 docker compose up --build payment-cron
 ```
 
+## Payment Processing Exercise
+
+After a refund is claimed, the system needs to eventually send an ACH payment request to the bank simulator and apply the bank response.
+
+```txt
+unclaimed refund
+    |
+    | user submits valid ACH claim
+    v
+claimed, but not yet sent to bank
+    |
+    | cron includes payment in outbound CSV
+    v
+sent to bank, waiting for response
+    |
+    | bank response row is accepted
+    v
+completed
+
+sent to bank, waiting for response
+    |
+    | bank response row is rejected
+    v
+rejected
+```
+
 ## Bank Simulator
 
 The `bank` service watches `sftp/upload/outbound` every 3 seconds, writes responses to `sftp/upload/inbound`, and archives processed inputs to `sftp/upload/archive`.
