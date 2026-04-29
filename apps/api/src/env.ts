@@ -3,6 +3,7 @@ import "dotenv/config";
 export const env = {
   port: Number(process.env.API_PORT ?? 3000),
   databaseUrl: process.env.DATABASE_URL ?? "postgres://payments:payments@localhost:5432/payments",
+  encryptionKey: process.env.ENCRYPTION_KEY ?? "",
   paymentCron: {
     intervalMs: Number(process.env.PAYMENT_CRON_INTERVAL_MS ?? 5000),
   },

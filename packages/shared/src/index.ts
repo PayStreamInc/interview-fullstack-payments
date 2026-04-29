@@ -4,6 +4,14 @@ export const refundStatusSchema = z.enum(["unclaimed", "pending", "exported", "p
 
 export type RefundStatus = z.infer<typeof refundStatusSchema>;
 
+export const RefundStatus = {
+  Unclaimed: "unclaimed",
+  Pending: "pending",
+  Exported: "exported",
+  Paid: "paid",
+  Failed: "failed",
+} as const;
+
 export const refundSchema = z.object({
   id: z.string().uuid(),
   amountCents: z.number().int().positive(),

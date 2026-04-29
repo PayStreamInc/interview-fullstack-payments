@@ -1,78 +1,21 @@
-import type { ClaimRefundRequest, Refund } from "@interview-payments/shared";
-import { useEffect, useState } from "react";
 import { Alert } from "./components/ui/alert";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-
-const apiUrl = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:3000";
+import { useRefunds } from "./hooks/useRefunds";
 
 export function App() {
-  const [refunds, setRefunds] = useState<Refund[]>([]);
-  const [selectedRefund, setSelectedRefund] = useState<Refund | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    fetch(`${apiUrl}/refunds`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Could not load refunds");
-        return response.json() as Promise<Refund[]>;
-      })
-      .then((availableRefunds) => {
-        setRefunds(availableRefunds);
-        setSelectedRefund(availableRefunds[0] ?? null);
-      })
-      .catch((loadError: Error) => setError(loadError.message))
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  function selectRefund(refund: Refund) {
-    setSelectedRefund(refund);
-    setMessage(null);
-    setError(null);
-  }
-
-  async function claimRefund(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selectedRefund) return;
-
-    setError(null);
-    setMessage(null);
-    setIsSubmitting(true);
-
-    const formData = new FormData(event.currentTarget);
-    const payload: ClaimRefundRequest = {
-      accountHolderName: String(formData.get("accountHolderName") ?? ""),
-      routingNumber: String(formData.get("routingNumber") ?? ""),
-      accountNumber: String(formData.get("accountNumber") ?? ""),
-      accountType: String(
-        formData.get("accountType") ?? "checking",
-      ) as ClaimRefundRequest["accountType"],
-    };
-
-    try {
-      const response = await fetch(`${apiUrl}/refunds/${selectedRefund.id}/claim`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const body = (await response.json()) as { error?: string };
-        throw new Error(body.error ?? "Claim failed");
-      }
-
-      setMessage("Refund claim submitted.");
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Claim failed");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const {
+    refunds,
+    selectedRefund,
+    isLoading,
+    isSubmitting,
+    successMessage,
+    error,
+    selectRefund,
+    handleClaimSubmit,
+  } = useRefunds();
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl items-center px-4 py-10">
@@ -124,7 +67,7 @@ export function App() {
               </p>
             </div>
 
-            <form className="space-y-4" onSubmit={claimRefund}>
+            <form className="space-y-4" onSubmit={handleClaimSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="accountHolderName">Account holder name</Label>
                 <Input id="accountHolderName" name="accountHolderName" autoComplete="name" />
@@ -152,7 +95,7 @@ export function App() {
                 </select>
               </div>
 
-              {message ? <Alert>{message}</Alert> : null}
+              {successMessage ? <Alert>{successMessage}</Alert> : null}
               {error ? <Alert variant="destructive">{error}</Alert> : null}
 
               <Button
