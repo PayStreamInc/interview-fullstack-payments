@@ -15,6 +15,8 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reload, setReload] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${apiUrl}/refunds`)
@@ -24,17 +26,26 @@ export function App() {
       })
       .then((availableRefunds) => {
         setRefunds(availableRefunds);
-        setSelectedRefund(availableRefunds[0] ?? null);
+        const first = availableRefunds[0] ?? null;
+        setSelectedRefund(first);
+        if (first) setIdempotencyKey(crypto.randomUUID());
       })
       .catch((loadError: Error) => setError(loadError.message))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [reload]);
 
   function selectRefund(refund: Refund) {
     setSelectedRefund(refund);
+    setIdempotencyKey(crypto.randomUUID());
     setMessage(null);
     setError(null);
   }
+
+  useEffect(() => {
+    if (isSubmitting) {
+      setReload((prev) => !prev);
+    }
+  }, [isSubmitting])
 
   async function claimRefund(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -92,11 +103,10 @@ export function App() {
             <div className="space-y-2">
               {refunds.map((refund) => (
                 <button
-                  className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
-                    selectedRefund?.id === refund.id
-                      ? "border-primary bg-muted"
-                      : "border-border bg-white hover:bg-muted"
-                  }`}
+                  className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${selectedRefund?.id === refund.id
+                    ? "border-primary bg-muted"
+                    : "border-border bg-white hover:bg-muted"
+                    }`}
                   key={refund.id}
                   onClick={() => selectRefund(refund)}
                   type="button"

@@ -3,8 +3,21 @@ CREATE TABLE IF NOT EXISTS refunds (
   amount_cents integer NOT NULL CHECK (amount_cents > 0),
   currency char(3) NOT NULL,
   status text NOT NULL CHECK (status IN ('unclaimed', 'pending', 'exported', 'paid', 'failed')),
+  account_holder_name text,
+  routing_number char(9),
+  account_number varchar(17),
+  account_type text CHECK (account_type IN ('checking', 'savings')),
+  payment_id uuid,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+  key             text        PRIMARY KEY,
+  refund_id       uuid        NOT NULL REFERENCES refunds(id),
+  response_status integer     NOT NULL,
+  response_body   jsonb       NOT NULL,
+  created_at      timestamptz NOT NULL DEFAULT now()
 );
 
 INSERT INTO refunds (id, amount_cents, currency, status)
