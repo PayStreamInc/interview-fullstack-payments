@@ -1,3 +1,4 @@
+import type { Refund, RefundStatus } from "@interview-payments/shared";
 import { Pool } from "pg";
 import { env } from "./env.js";
 
@@ -7,10 +8,10 @@ export type RefundRow = {
   id: string;
   amount_cents: number;
   currency: string;
-  status: string;
+  status: RefundStatus;
 };
 
-export function mapRefund(row: RefundRow) {
+export function mapRefund(row: RefundRow): Refund {
   return {
     id: row.id,
     amountCents: row.amount_cents,

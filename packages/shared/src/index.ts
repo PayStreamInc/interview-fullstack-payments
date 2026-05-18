@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const refundStatusSchema = z.enum(["unclaimed", "pending", "exported", "paid", "failed"]);
+export const refundStatusSchema = z.enum(["unclaimed", "pending", "failed", "completed"]);
 
 export type RefundStatus = z.infer<typeof refundStatusSchema>;
 

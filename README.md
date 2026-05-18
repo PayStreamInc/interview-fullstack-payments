@@ -51,11 +51,11 @@ unclaimed refund
     |
     | user submits valid ACH claim
     v
-claimed, but not yet sent to bank
+pending
     |
     | cron includes payment in outbound CSV
     v
-sent to bank, waiting for response
+pending
     |
     | bank response row is accepted
     v
@@ -65,7 +65,7 @@ sent to bank, waiting for response
     |
     | bank response row is rejected
     v
-rejected
+failed
 ```
 
 ## Bank Simulator

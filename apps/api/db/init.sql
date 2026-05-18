@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS refunds (
   id uuid PRIMARY KEY,
   amount_cents integer NOT NULL CHECK (amount_cents > 0),
   currency char(3) NOT NULL,
-  status text NOT NULL CHECK (status IN ('unclaimed', 'pending', 'exported', 'paid', 'failed')),
+  status text NOT NULL CHECK (status IN ('unclaimed', 'pending', 'failed', 'completed')),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
