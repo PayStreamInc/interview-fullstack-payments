@@ -9,7 +9,7 @@ Minimal fullstack scaffold for a senior interview exercise around ACH refund cla
 - Bank: TypeScript worker that reads outbound CSVs and writes response CSVs
 - Infra: Docker Compose with Postgres, SFTP, API, web, and bank
 
-## Run
+## Setup
 
 ```sh
 npm install
