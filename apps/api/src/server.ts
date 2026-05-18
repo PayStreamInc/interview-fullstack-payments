@@ -29,24 +29,6 @@ app.get("/refunds", async (_req, res, next) => {
   }
 });
 
-app.get("/refunds/:id", async (req, res, next) => {
-  try {
-    const result = await pool.query<RefundRow>(
-      `SELECT id, amount_cents, currency, status FROM refunds WHERE id = $1`,
-      [req.params.id],
-    );
-
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: "Refund not found" });
-      return;
-    }
-
-    res.json(mapRefund(result.rows[0]));
-  } catch (error) {
-    next(error);
-  }
-});
-
 app.post("/refunds/:id/claim", async (req, res) => {
   const parsed = claimRefundRequestSchema.safeParse(req.body);
 
