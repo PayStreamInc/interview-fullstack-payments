@@ -1,6 +1,7 @@
 import { claimRefundRequestSchema } from "@interview-payments/shared";
 import cors from "cors";
 import express from "express";
+import { z } from "zod";
 import { pool, mapRefund, type RefundRow } from "./db.js";
 import { env } from "./env.js";
 import { listSftpDirectory } from "./sftp.js";
@@ -29,7 +30,14 @@ app.get("/refunds", async (_req, res, next) => {
   }
 });
 
-app.post("/refunds/:id/claim", async (req, res) => {
+app.post("/refunds/:id/claim", async (req, res, next) => {
+  const id = z.string().uuid().safeParse(req.params.id);
+
+  if (!id.success) {
+    res.status(400).json({ error: "Invalid refund id" });
+    return;
+  }
+
   const parsed = claimRefundRequestSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -40,7 +48,36 @@ app.post("/refunds/:id/claim", async (req, res) => {
     return;
   }
 
-  res.status(501).json({ error: "Claim flow is intentionally left as the interview task" });
+  try {
+    // Atomic guard: only an `unclaimed` refund transitions to `pending`,
+    // so concurrent claims on the same refund cannot double-submit.
+    const claimed = await pool.query<RefundRow>(
+      `UPDATE refunds
+       SET status = 'pending', updated_at = now()
+       WHERE id = $1 AND status = 'unclaimed'
+       RETURNING id, amount_cents, currency, status`,
+      [id.data],
+    );
+
+    if (claimed.rowCount === 0) {
+      const existing = await pool.query<RefundRow>(
+        `SELECT id, amount_cents, currency, status FROM refunds WHERE id = $1`,
+        [id.data],
+      );
+
+      if (existing.rowCount === 0) {
+        res.status(404).json({ error: "Refund not found" });
+        return;
+      }
+
+      res.status(409).json({ error: "Refund is not unclaimed" });
+      return;
+    }
+
+    res.json(mapRefund(claimed.rows[0]));
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/dev/sftp-test", async (_req, res, next) => {
