@@ -29,7 +29,7 @@ app.get("/refunds", async (_req, res, next) => {
   }
 });
 
-app.post("/refunds/:id/claim", async (req, res) => {
+app.post("/refunds/:id/claim", async (req, res, next) => {
   const parsed = claimRefundRequestSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -40,7 +40,24 @@ app.post("/refunds/:id/claim", async (req, res) => {
     return;
   }
 
-  res.status(501).json({ error: "Claim flow is intentionally left as the interview task" });
+  try {
+    const result = await pool.query<RefundRow>(
+      `UPDATE refunds
+       SET status = 'pending'
+       WHERE id = $1 AND status = 'unclaimed'
+       RETURNING id, amount_cents, currency, status`,
+      [req.params.id],
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: "Refund not found or already claimed" });
+      return;
+    }
+
+    res.json(mapRefund(result.rows[0]));
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/dev/sftp-test", async (_req, res, next) => {
