@@ -3,6 +3,11 @@ CREATE TABLE IF NOT EXISTS refunds (
   amount_cents integer NOT NULL CHECK (amount_cents > 0),
   currency char(3) NOT NULL,
   status text NOT NULL CHECK (status IN ('unclaimed', 'pending', 'failed', 'completed')),
+  payment_id text,
+  account_holder_name text,
+  routing_number text,
+  account_number text,
+  account_type text CHECK (account_type IN ('checking', 'savings')),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );

@@ -1,4 +1,5 @@
-import { claimRefundRequestSchema } from "@interview-payments/shared";
+import { randomUUID } from "node:crypto";
+import { claimRefundRequestSchema, type RefundStatus } from "@interview-payments/shared";
 import cors from "cors";
 import express from "express";
 import { pool, mapRefund, type RefundRow } from "./db.js";
@@ -29,7 +30,7 @@ app.get("/refunds", async (_req, res, next) => {
   }
 });
 
-app.post("/refunds/:id/claim", async (req, res) => {
+app.post("/refunds/:id/claim", async (req, res, next) => {
   const parsed = claimRefundRequestSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -40,7 +41,50 @@ app.post("/refunds/:id/claim", async (req, res) => {
     return;
   }
 
-  res.status(501).json({ error: "Claim flow is intentionally left as the interview task" });
+  try {
+    const claim = parsed.data;
+    const paymentId = `pay_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+
+    const updated = await pool.query<RefundRow>(
+      `UPDATE refunds
+       SET status = 'pending',
+           updated_at = now(),
+           payment_id = $2,
+           account_holder_name = $3,
+           routing_number = $4,
+           account_number = $5,
+           account_type = $6
+       WHERE id = $1::uuid AND status = 'unclaimed'
+       RETURNING id, amount_cents, currency, status`,
+      [
+        req.params.id,
+        paymentId,
+        claim.accountHolderName,
+        claim.routingNumber,
+        claim.accountNumber,
+        claim.accountType,
+      ],
+    );
+
+    if (updated.rowCount === 1 && updated.rows[0]) {
+      res.status(200).json(mapRefund(updated.rows[0]));
+      return;
+    }
+
+    const existing = await pool.query<{ status: RefundStatus }>(
+      `SELECT status FROM refunds WHERE id = $1::uuid`,
+      [req.params.id],
+    );
+
+    if (existing.rowCount === 0) {
+      res.status(404).json({ error: "Refund not found" });
+      return;
+    }
+
+    res.status(409).json({ error: "Refund must be unclaimed to claim" });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/dev/sftp-test", async (_req, res, next) => {
